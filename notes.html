@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>闪念胶囊 AI Pro (樱花粉)</title>
+    <style>
+        /* --- 基础风格 (粉色系) --- */
+        body {
+            background-color: #fff0f3;
+            color: #5c3a41;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            box-sizing: border-box;
+        }
+
+        /* --- 顶部导航栏 --- */
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px dashed #ffccd5;
+        }
+        .app-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #ff7597;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .header-right {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-nav {
+            background: #fff;
+            border: 1px solid #ffb3c1;
+            color: #ff7597;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            font-weight: bold;
+            box-shadow: 0 2px 5px rgba(255, 182, 193, 0.2);
+        }
+        .btn-nav:hover { background: #ff7597; color: #fff; border-color: #ff7597; }
+
+        /* --- 视图容器 --- */
+        .view-container {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+        .view-container.active { display: block; }
+
+        /* --- 输入区 --- */
+        .input-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .input-main {
+            flex: 1;
+            padding: 12px 15px;
+            border-radius: 12px;
+            border: 2px solid #ffe3e8;
+            background: #fff;
+            color: #5c3a41;
+            font-size: 16px;
+            outline: none;
+            transition: all 0.2s;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+        }
+        .input-main:focus { border-color: #ff8fa3; background: #fff; }
+        .input-main::placeholder { color: #dcb0ba; }
+        
+        button.btn-add {
+            background: #ff7597;
+            color: white;
+            border: none;
+            padding: 0 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(255, 117, 151, 0.3);
+            transition: transform 0.1s;
+        }
+        button.btn-add:hover { background: #ff5c86; transform: translateY(-1px); }
+        button.btn-add:active { transform: translateY(1px); }
+
+        /* --- 列表卡片 --- */
+        .card {
+            background: #ffffff;
+            border: 1px solid #ffe3e8;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.2s;
+            box-shadow: 0 2px 8px rgba(255, 182, 193, 0.15);
+        }
+        .card:hover { 
+            border-color: #ffb3c1; 
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 182, 193, 0.25);
+        }
+        
+        .card-head {
+            padding: 10px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 40px;
+        }
+
+        .head-left {
+            display: flex;
+            align-items: center;
+            flex: 1;
+            gap: 10px;
+            overflow: hidden;
+        }
+        
+        .arrow-btn {
+            cursor: pointer;
+            color: #ffb3c1;
+            font-size: 12px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+            background: #fff0f3;
+            flex-shrink: 0;
+        }
+        .arrow-btn:hover { color: #ff7597; background: #ffe6eb; }
+        .card.open .arrow-btn { transform: rotate(90deg); background: #ff7597; color: #fff; }
+
+        input.title-edit {
+            background: transparent;
+            border: none;
+            color: #5c3a41;
+            font-size: 15px;
+            font-weight: 600;
+            width: 100%;
+            outline: none;
+            font-family: inherit;
+        }
+        input.title-edit:focus { color: #ff5c86; }
+        .archived-title { text-decoration: line-through; color: #dcb0ba !important; }
+
+        .head-right {
+            display: flex;
+            gap: 6px;
+            margin-left: 10px;
+            opacity: 0; 
+            transition: opacity 0.2s;
+        }
+        .card:hover .head-right { opacity: 1; }
+
+        .btn-icon {
+            padding: 5px 10px;
+            font-size: 12px;
+            background: #fff0f3;
+            border: 1px solid transparent;
+            color: #ff8fa3;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .btn-icon:hover { background: #ffe6eb; color: #ff5c86; }
+        .btn-del:hover { background: #fff5f5; color: #ff4d4d; border-color: #ffcccc; }
+
+        /* 详情区 */
+        .card-body {
+            display: none;
+            border-top: 1px dashed #ffe3e8;
+            background: #fffafa;
+            position: relative;
+        }
+        .card.open .card-body { display: block; }
+
+        /* AI 工具栏 */
+        .ai-toolbar {
+            padding: 8px 15px;
+            background: #fff0f3;
+            border-bottom: 1px dashed #ffe3e8;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap; /* 防止按钮过多换行 */
+        }
+        
+        .btn-ai {
+            background: white;
+            border: 1px solid #ffb3c1;
+            color: #ff7597;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .btn-ai:hover { background: #ff7597; color: white; }
+        .btn-ai.loading { opacity: 0.7; cursor: wait; }
+
+        textarea.body-edit {
+            width: 100%;
+            min-height: 120px;
+            background: transparent;
+            border: none;
+            color: #7d5a60;
+            resize: vertical;
+            outline: none;
+            padding: 15px;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.6;
+            box-sizing: border-box;
+            display: block;
+        }
+        textarea.body-edit::placeholder { color: #e0c0c8; }
+
+        /* 模态框 (设置 API Key) */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(92, 58, 65, 0.3);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal {
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .modal h3 { margin: 0 0 15px 0; color: #ff7597; }
+        .modal input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ffe3e8;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-sizing: border-box;
+            outline: none;
+        }
+        .modal input:focus { border-color: #ff7597; }
+        .modal-buttons { display: flex; justify-content: flex-end; gap: 10px; }
+        
+        /* 空状态 */
+        .empty-tip {
+            text-align: center;
+            color: #dcb0ba;
+            margin-top: 60px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部导航 -->
+    <div class="header-bar">
+        <div class="app-title" id="pageTitle">🌸 闪念胶囊 AI</div>
+        <div class="header-right">
+            <button class="btn-nav" onclick="openSettings()">⚙️ 设置</button>
+            <button class="btn-nav" id="navBtn" onclick="switchView()">🎀 归档箱</button>
+        </div>
+    </div>
+
+    <!-- 视图1：进行中 -->
+    <div id="view-active" class="view-container active">
+        <div class="input-box">
+            <input type="text" class="input-main" id="newTitle" placeholder="写下你的小想法..." onkeypress="if(event.keyCode==13) addNote()">
+            <button class="btn-add" onclick="addNote()">记录</button>
+        </div>
+        <div id="list-active"></div>
+    </div>
+
+    <!-- 视图2：已归档 -->
+    <div id="view-archive" class="view-container">
+        <div id="list-archive"></div>
+    </div>
+
+    <!-- 设置 API Key 模态框 -->
+    <div class="modal-overlay" id="settingsModal">
+        <div class="modal">
+            <h3>⚙️ 设置 Gemini API Key</h3>
+            <p style="font-size:12px; color:#888; margin-bottom:10px;">
+                为了使用 AI 功能，请输入您的 Google Gemini API Key。<br>
+                (Key 仅保存在您的浏览器本地，不会上传)
+            </p>
+            <input type="password" id="apiKeyInput" placeholder="在此粘贴 API Key">
+            <div class="modal-buttons">
+                <button class="btn-nav" onclick="closeSettings()">取消</button>
+                <button class="btn-add" onclick="saveApiKey()">保存</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 核心配置 ---
+        const systemApiKey = ""; 
+
+        // --- 数据逻辑 ---
+        let notes = [];
+        let currentView = 'active';
+
+        try {
+            const saved = localStorage.getItem('notes_v4_clean'); 
+            if (saved) notes = JSON.parse(saved);
+        } catch (e) { console.error("Storage Error"); }
+
+        function save() { try { localStorage.setItem('notes_v4_clean', JSON.stringify(notes)); } catch (e) {} }
+        function saveAndRender() { save(); render(); }
+
+        // --- API Key 管理 ---
+        function getApiKey() {
+            return localStorage.getItem('user_gemini_api_key') || systemApiKey;
+        }
+        function openSettings() {
+            document.getElementById('settingsModal').style.display = 'flex';
+            document.getElementById('apiKeyInput').value = localStorage.getItem('user_gemini_api_key') || '';
+        }
+        function closeSettings() {
+            document.getElementById('settingsModal').style.display = 'none';
+        }
+        function saveApiKey() {
+            const key = document.getElementById('apiKeyInput').value.trim();
+            localStorage.setItem('user_gemini_api_key', key);
+            closeSettings();
+            alert("API Key 已保存！✨");
+        }
+
+        // --- AI 调用逻辑 ---
+        async function callGemini(noteId, type) {
+            const apiKey = getApiKey();
+            if (!apiKey) {
+                alert("请先点击右上角【设置】填入 Gemini API Key 🌸");
+                openSettings();
+                return;
+            }
+
+            const note = notes.find(n => n.id === noteId);
+            if (!note) return;
+
+            const btnId = `ai-btn-${type}-${noteId}`;
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            
+            // Loading 状态
+            btn.innerHTML = '✨ 思考中...';
+            btn.classList.add('loading');
+            
+            let prompt = "";
+            const content = note.title + (note.body ? "\nDetails: " + note.body : "");
+
+            if (type === 'expand') {
+                prompt = `你是一个有帮助的助手。请根据以下笔记内容，扩写成详细的步骤、注意事项或草稿。保持语气友好简洁。笔记内容： "${content}"`;
+            } else if (type === 'todo') {
+                prompt = `请将以下笔记内容拆解为一步步的待办清单。使用简单的短横线 - 作为列表符号。笔记内容： "${content}"`;
+            } else if (type === 'polish') {
+                prompt = `请润色以下文本，使其更通顺、清晰、结构更好，同时保持原有语气。直接输出润色后的内容。内容： "${content}"`;
+            } else if (type === 'emojify') {
+                prompt = `请重写以下文本，加入适量可爱且相关的 Emoji 表情符号，使其看起来更活泼有趣（符合樱花粉色系风格）。内容： "${content}"`;
+            }
+
+            try {
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }]
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (data.error) {
+                    throw new Error(data.error.message);
+                }
+
+                const resultText = data.candidates[0].content.parts[0].text;
+                
+                // 自动追加内容
+                const separator = note.body ? "\n\n--- AI 生成 ---\n" : "";
+                note.body = (note.body || "") + separator + resultText;
+                
+                saveAndRender();
+                
+                // 确保展开并滚动到底部
+                setTimeout(() => {
+                   const card = document.getElementById(`card-${noteId}`);
+                   if(card && !note.isOpen) toggleOpen(noteId); 
+                }, 100);
+
+            } catch (error) {
+                alert("AI 调用失败: " + error.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.classList.remove('loading');
+            }
+        }
+
+        // --- 视图切换与常规逻辑 ---
+        function switchView() {
+            const activeEl = document.getElementById('view-active');
+            const archiveEl = document.getElementById('view-archive');
+            const btn = document.getElementById('navBtn');
+            const title = document.getElementById('pageTitle');
+
+            if (currentView === 'active') {
+                currentView = 'archive';
+                activeEl.classList.remove('active');
+                archiveEl.classList.add('active');
+                btn.innerHTML = '⬅️ 返回';
+                title.innerText = '🎀 历史记录';
+            } else {
+                currentView = 'active';
+                archiveEl.classList.remove('active');
+                activeEl.classList.add('active');
+                btn.innerHTML = '🎀 归档箱';
+                title.innerText = '🌸 闪念胶囊 AI';
+            }
+            render();
+        }
+
+        function addNote() {
+            const input = document.getElementById('newTitle');
+            const val = input.value.trim();
+            if (!val) return;
+            notes.unshift({ id: Date.now(), title: val, body: "", isArchived: false, isOpen: false });
+            input.value = '';
+            saveAndRender();
+        }
+
+        function deleteNote(id) {
+            notes = notes.filter(n => n.id !== id);
+            saveAndRender();
+        }
+
+        function toggleArchive(id) {
+            const n = notes.find(x => x.id === id);
+            if (n) {
+                n.isArchived = !n.isArchived;
+                n.isOpen = false;
+                saveAndRender();
+            }
+        }
+
+        function toggleOpen(id) {
+            const n = notes.find(x => x.id === id);
+            if (n) { n.isOpen = !n.isOpen; saveAndRender(); }
+        }
+
+        function updateTitle(id, newTitle) {
+            const n = notes.find(x => x.id === id);
+            if (n) { n.title = newTitle; save(); }
+        }
+
+        function updateBody(id, newBody) {
+            const n = notes.find(x => x.id === id);
+            if (n) { n.body = newBody; save(); }
+        }
+
+        function render() {
+            const container = currentView === 'active' ? document.getElementById('list-active') : document.getElementById('list-archive');
+            container.innerHTML = '';
+            const filteredNotes = notes.filter(n => currentView === 'active' ? !n.isArchived : n.isArchived);
+
+            if (filteredNotes.length === 0) {
+                container.innerHTML = `<div class="empty-tip">${currentView === 'active' ? '✨ 今天有什么奇思妙想？' : '这里空空如也~'}</div>`;
+                return;
+            }
+
+            filteredNotes.forEach(n => {
+                const openClass = n.isOpen ? 'open' : '';
+                const titleClass = n.isArchived ? 'title-edit archived-title' : 'title-edit';
+                const archiveBtnText = n.isArchived ? '还原' : '归档';
+
+                const html = `
+                    <div class="card ${openClass}" id="card-${n.id}">
+                        <div class="card-head">
+                            <div class="head-left">
+                                <div class="arrow-btn" onclick="toggleOpen(${n.id})">▶</div>
+                                <input class="${titleClass}" value="${n.title}" oninput="updateTitle(${n.id}, this.value)" placeholder="无标题">
+                            </div>
+                            <div class="head-right">
+                                <button class="btn-icon" onclick="toggleArchive(${n.id})">${archiveBtnText}</button>
+                                <button class="btn-icon btn-del" onclick="deleteNote(${n.id})">删除</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- AI 工具栏 (仅在未归档状态显示) -->
+                            ${!n.isArchived ? `
+                            <div class="ai-toolbar">
+                                <button class="btn-ai" id="ai-btn-expand-${n.id}" onclick="callGemini(${n.id}, 'expand')">✨ 扩写</button>
+                                <button class="btn-ai" id="ai-btn-todo-${n.id}" onclick="callGemini(${n.id}, 'todo')">📋 待办</button>
+                                <button class="btn-ai" id="ai-btn-polish-${n.id}" onclick="callGemini(${n.id}, 'polish')">✍️ 润色</button>
+                                <button class="btn-ai" id="ai-btn-emojify-${n.id}" onclick="callGemini(${n.id}, 'emojify')">🌸 萌化</button>
+                            </div>
+                            ` : ''}
+                            <textarea class="body-edit" placeholder="记下详细的小秘密..." oninput="updateBody(${n.id}, this.value)">${n.body}</textarea>
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += html;
+            });
+        }
+        render();
+    </script>
+</body>
+</html>
