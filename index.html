@@ -26,13 +26,35 @@
     const timerDisplay = document.getElementById('timer');
     const statusDisplay = document.getElementById('status');
     const startBtn = document.getElementById('startBtn');
+    
+    // 声音合成器设置
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    function beep() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.type = 'sine'; osc.frequency.value = 880; 
+        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.5);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+    }
+
     function formatTime(s) { const m = Math.floor(s / 60); const sec = s % 60; return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
     function startFocus() {
+        if (audioCtx.state === 'suspended') audioCtx.resume(); // 解锁音频
         if (timerId) return;
         startBtn.style.opacity = "0.5"; startBtn.innerText = "专注中..."; statusDisplay.innerText = "保持专注！";
         timerId = setInterval(() => {
             timeLeft--; timerDisplay.innerText = formatTime(timeLeft);
-            if (timeLeft <= 0) { clearInterval(timerId); timerId = null; timerDisplay.innerText = "完成!"; statusDisplay.innerText = "休息一下。"; startBtn.innerText = "开始专注"; startBtn.style.opacity = "1"; }
+            if (timeLeft <= 0) { 
+                clearInterval(timerId); timerId = null; 
+                timerDisplay.innerText = "完成!"; statusDisplay.innerText = "时间到！"; 
+                startBtn.innerText = "开始专注"; startBtn.style.opacity = "1"; 
+                // 连续响三声
+                beep(); setTimeout(beep, 600); setTimeout(beep, 1200);
+            }
         }, 1000);
     }
     function resetTimer() {
