@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>30分钟专注模式</title>
+<style>
+    body { margin: 0; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; background-color: #191919; font-family: sans-serif; color: #ffffff; }
+    #timer { font-size: 80px; font-weight: bold; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .btn-group { display: flex; gap: 15px; }
+    button { padding: 10px 25px; font-size: 16px; cursor: pointer; border: none; border-radius: 6px; }
+    #startBtn { background-color: #2eaadc; color: white; }
+    #resetBtn { background-color: #3f4447; color: #bdbdbd; }
+    #status { margin-top: 15px; font-size: 14px; color: #9b9b9b; height: 20px; }
+</style>
+</head>
+<body>
+<div id="timer">30:00</div>
+<div class="btn-group">
+    <button id="startBtn" onclick="startFocus()">开始专注</button>
+    <button id="resetBtn" onclick="resetTimer()">重置</button>
+</div>
+<div id="status">准备开始高效的30分钟</div>
+<script>
+    let timeLeft = 30 * 60; let timerId = null; const originalTime = 30 * 60;
+    const timerDisplay = document.getElementById('timer');
+    const statusDisplay = document.getElementById('status');
+    const startBtn = document.getElementById('startBtn');
+    function formatTime(s) { const m = Math.floor(s / 60); const sec = s % 60; return `${m.toString().padStart(2,'0')}:${sec.toString().padStart(2,'0')}`; }
+    function startFocus() {
+        if (timerId) return;
+        startBtn.style.opacity = "0.5"; startBtn.innerText = "专注中..."; statusDisplay.innerText = "保持专注！";
+        timerId = setInterval(() => {
+            timeLeft--; timerDisplay.innerText = formatTime(timeLeft);
+            if (timeLeft <= 0) { clearInterval(timerId); timerId = null; timerDisplay.innerText = "完成!"; statusDisplay.innerText = "休息一下。"; startBtn.innerText = "开始专注"; startBtn.style.opacity = "1"; }
+        }, 1000);
+    }
+    function resetTimer() {
+        clearInterval(timerId); timerId = null; timeLeft = originalTime;
+        timerDisplay.innerText = formatTime(timeLeft); statusDisplay.innerText = "准备开始"; startBtn.innerText = "开始专注"; startBtn.style.opacity = "1";
+    }
+</script>
+</body>
+</html>
